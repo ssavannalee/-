@@ -40,6 +40,12 @@ python multi_chatroom.py "우리 팀의 AI 도입 전략" --rounds 2 --mock
 python multi_chatroom.py "우리 팀의 AI 도입 전략" --rounds 2
 ```
 
+### 3) 결과를 파일로 저장해서 보기
+```bash
+python multi_chatroom.py "우리 팀의 AI 도입 전략" --rounds 2 --mock --output outputs/result.txt
+cat outputs/result.txt
+```
+
 ## 구조
 - `OpenAIBot`, `GeminiBot`, `ClaudeBot`: 각 모델 API 클라이언트
 - `MockBot`: 키 없이 로컬에서 흐름 테스트
@@ -51,3 +57,8 @@ python multi_chatroom.py "우리 팀의 AI 도입 전략" --rounds 2
 - 찬반 역할 분담(예: Claude=비판적 검토자)
 - 웹 UI(예: Streamlit)로 실시간 채팅처럼 시각화
 - 발언 로그 저장(JSON/SQLite)
+
+## 결과물 보는 방법 (빠른 답변)
+1. 터미널에서 실행하면 즉시 화면에 대화/결론이 출력됩니다.
+2. `--output` 옵션을 쓰면 결과가 파일로 저장되어 나중에 열어볼 수 있습니다.
+3. 저장 파일 확인: `cat outputs/result.txt` (mac/linux)

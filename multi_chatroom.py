@@ -3,6 +3,7 @@ import asyncio
 import os
 from dataclasses import dataclass
 from typing import List, Optional
+from pathlib import Path
 
 
 @dataclass
@@ -124,7 +125,7 @@ def build_prompt(topic: str, history: List[Message], speaker: str, round_no: int
     )
 
 
-async def run_discussion(topic: str, rounds: int, use_mock: bool) -> None:
+async def run_discussion(topic: str, rounds: int, use_mock: bool, output: Optional[str] = None) -> None:
     bots: List[BotClient]
     if use_mock:
         bots = [MockBot("ChatGPT"), MockBot("Gemini"), MockBot("Claude")]
@@ -132,10 +133,13 @@ async def run_discussion(topic: str, rounds: int, use_mock: bool) -> None:
         bots = [OpenAIBot(), GeminiBot(), ClaudeBot()]
 
     history: List[Message] = []
+    logs: List[str] = []
 
     print(f"\n🧵 주제: {topic}\n")
+    logs.append(f"🧵 주제: {topic}\n")
     for round_no in range(1, rounds + 1):
         print(f"===== Round {round_no} =====")
+        logs.append(f"===== Round {round_no} =====")
         for bot in bots:
             try:
                 content = await bot.reply(topic, history, round_no)
@@ -144,11 +148,20 @@ async def run_discussion(topic: str, rounds: int, use_mock: bool) -> None:
             message = Message(bot.name, content)
             history.append(message)
             print(f"{bot.name}: {content}\n")
+            logs.append(f"{bot.name}: {content}\n")
 
     moderator = ModeratorBot(use_mock=use_mock)
     conclusion = await moderator.reply(topic, history, rounds + 1)
     print("===== 최종 결론 =====")
     print(conclusion)
+    logs.append("===== 최종 결론 =====")
+    logs.append(conclusion)
+
+    if output:
+        output_path = Path(output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text("\n".join(logs), encoding="utf-8")
+        print(f"\n📄 대화 로그 저장: {output_path}")
 
 
 def parse_args() -> argparse.Namespace:
@@ -159,6 +172,12 @@ def parse_args() -> argparse.Namespace:
         "--mock",
         action="store_true",
         help="실제 API 호출 없이 모의 응답 사용",
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default="",
+        help="대화 결과를 파일로 저장할 경로 (예: outputs/chat.txt)",
     )
     return parser.parse_args()
 
@@ -183,7 +202,7 @@ async def main() -> None:
     if env_error:
         raise SystemExit(env_error)
 
-    await run_discussion(topic=args.topic, rounds=args.rounds, use_mock=args.mock)
+    await run_discussion(topic=args.topic, rounds=args.rounds, use_mock=args.mock, output=args.output or None)
 
 
 if __name__ == "__main__":
